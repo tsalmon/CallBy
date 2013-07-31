@@ -1,9 +1,13 @@
-{-
-f n =
-    [ a | a <- [
-                if (null [y| y <- [2..(x-1)], x `mod` y == 0] )
-                          then x else -1 | x <- [2..n] ] , a > 0]
--}
+import System.Environment
+import System.IO
 
-main = do 
-  print (f 4)
+readfile f = do
+  outh <- openFile f ReadMode
+  x <- hGetContents outh
+  putStrLn x
+  hClose outh
+
+main = do
+  x <- getArgs
+  readfile (head x)
+  
