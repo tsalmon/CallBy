@@ -31,13 +31,17 @@ insert str txt p =
       
 isCsep x = x == ' ' || x== ';' || x == '\n' || x == ',' || x == '('
 
-algo_read x = 
+isMain x l p = False
+
+
+-- read file x writed in language l
+algo_read x l = 
   let aux pos fun acc = 
-        if(pos < (length x)) then
+        if(pos < (length x) && not (isMain x l pos)) then
           let getname buf_str buf_pos = 
                 if(isCsep(x!!buf_pos)) then "1" else "2"
           in case (x!!pos) of
-            '(' -> if (acc > 0) then aux (pos+1) (fun++([last fun])) (acc) 
+            '(' -> if (acc > 0) then aux (pos+1) (addlastlist fun (getname "" 0)) (acc) 
                    else aux (pos+1) (fun++[[getname "" 0]]) (acc)
             '{' -> aux (pos+1) fun (acc+1)
             '}' -> aux (pos+1) fun (acc-1)
@@ -46,13 +50,12 @@ algo_read x =
           show fun
   in aux 1 [] 0
 
-readfile f = do
+readfile f l = do
   outh <- openFile f ReadMode
   x <- hGetContents outh
-  putStrLn (algo_read x)
+  putStrLn (algo_read x l) --TODO: create method checkLanguage
   hClose outh
 
-main = do  
+main = do 
   x <- getArgs
-  readfile (head x)
-  
+  readfile (x!!0) (x!!1)
