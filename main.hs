@@ -1,5 +1,7 @@
 import System.Environment
-import System.IO  
+import System.IO
+import Text.Regex.Posix
+import Text.Regex(subRegex,mkRegex)
 {- 
 1)read the file given in parameters
 2)str is function declaration? -> add his name in fctn_list, enter in it [[name]...]
@@ -15,8 +17,9 @@ import System.IO
 6)write file_text in the file
 -}
   
-fctn_list = []
-            
+-- add e to last l
+addlastlist l e = (init l)++[(last l)++[e]]
+
 -- insert txt into str at position p 
 insert str txt p = 
   if(p < (length str)) then 
@@ -25,15 +28,31 @@ insert str txt p =
     a ++ txt ++ b
   else
     error "out of length"
-  
-algo x = print x
+      
+isCsep x = x == ' ' || x== ';' || x == '\n' || x == ',' || x == '('
+
+algo_read x = 
+  let aux pos fun acc = 
+        if(pos < (length x)) then
+          let getname buf_str buf_pos = 
+                if(isCsep(x!!buf_pos)) then "1" else "2"
+          in case (x!!pos) of
+            '(' -> if (acc > 0) then aux (pos+1) (fun++([last fun])) (acc) 
+                   else aux (pos+1) (fun++[[getname "" 0]]) (acc)
+            '{' -> aux (pos+1) fun (acc+1)
+            '}' -> aux (pos+1) fun (acc-1)
+            _   -> aux (pos+1) fun acc
+        else
+          show fun
+  in aux 1 [] 0
 
 readfile f = do
   outh <- openFile f ReadMode
   x <- hGetContents outh
+  putStrLn (algo_read x)
   hClose outh
 
-main = do
+main = do  
   x <- getArgs
   readfile (head x)
   
