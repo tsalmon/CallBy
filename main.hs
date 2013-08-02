@@ -17,8 +17,8 @@ import Text.Regex(subRegex,mkRegex)
 6)write file_text in the file
 -}
   
--- add e to last l
-addlastlist l e = (init l)++[(last l)++[e]]
+
+--checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
 
 -- insert txt into str at position p 
 insert str txt p = 
@@ -31,16 +31,17 @@ insert str txt p =
       
 isCsep x = x == ' ' || x== ';' || x == '\n' || x == ',' || x == '('
 
---checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
-
 --rm duplicate elem
 no_double [] = []
 no_double (e:l)= e:(no_double (filter (/=e) l))
 browse_list [] = []
 browse_list (e:l) = (no_double e):(browse_list l) 
 
--- read file x writed in language l
-algo_read x l = 
+-- add e to last l
+addlastlist l e = (init l)++[(last l)++[e]]
+
+-- read file x
+algo_read x = 
   let aux pos fun acc = 
         if(pos < (length x)) then
           let getname buf_str buf_pos = 
@@ -54,15 +55,40 @@ algo_read x l =
               '}' -> aux (pos+1) fun (acc-1)
               _   -> aux (pos+1) fun acc
         else
-          show (browse_list fun)
+          algo_write x (browse_list fun)
   in aux 1 [] 0
 
-readfile f l = do
+-- for a method (str), get calles methodes
+call_by str [] = ""
+call_by str (e:l) = if (str `elem` (tail e)) then (head e) ++ ", "++ (call_by str l) else (call_by str l)  
+
+algo_write str l = 
+  let aux pos new_str acc = 
+        if (pos < (length str)) then
+          let writePos buf_pos  = 
+                if ((str!!buf_pos) == '\n' || (str!!buf_pos) == ';' || (str!!buf_pos) == '}') 
+                then buf_pos  
+                else (writePos (buf_pos - 1)) in
+          let getname buf_str buf_pos = 
+                if(buf_pos > 0 && (str!!buf_pos) /= ' ') 
+                then getname ((str!!buf_pos):buf_str) (buf_pos-1) 
+                else buf_str
+          in case (str!!pos) of
+              '(' -> if (acc == 0) then aux (pos+1) (insert str ("\n call by :" ++ (call_by (getname "" pos) l) ++ "\n") (writePos pos)) (acc) 
+                     else aux (pos+1) new_str (acc)
+              '{' -> aux (pos+1) new_str (acc+1)
+              '}' -> aux (pos+1) new_str (acc-1)
+              _   -> aux (pos+1) new_str acc
+        else
+          putStrLn (new_str)
+  in aux 0 "" 0
+
+readfile f = do
   outh <- openFile f ReadMode
   x <- hGetContents outh
-  putStrLn (algo_read x l) --TODO: create method checkLanguage
+  (algo_read x) --TODO: create method checkLanguage
   hClose outh
 
 main = do 
   x <- getArgs
-  readfile (x!!0) (x!!1)
+  readfile (x!!0)
