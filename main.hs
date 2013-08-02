@@ -39,13 +39,15 @@ algo_read x l =
   let aux pos fun acc = 
         if(pos < (length x) && not (isMain x l pos)) then
           let getname buf_str buf_pos = 
-                if(isCsep(x!!buf_pos)) then "1" else "2"
+                if(pos > 0 && (x!!buf_pos) /= ' ') 
+                then getname ((x!!buf_pos):buf_str) (buf_pos-1) 
+                else buf_str
           in case (x!!pos) of
-            '(' -> if (acc > 0) then aux (pos+1) (addlastlist fun (getname "" 0)) (acc) 
-                   else aux (pos+1) (fun++[[getname "" 0]]) (acc)
-            '{' -> aux (pos+1) fun (acc+1)
-            '}' -> aux (pos+1) fun (acc-1)
-            _   -> aux (pos+1) fun acc
+              '(' -> if (acc > 0) then aux (pos+1) (addlastlist fun (getname "" (pos-1))) (acc) 
+                     else aux (pos+1) (fun++[[getname "" (pos-1)]]) (acc)
+              '{' -> aux (pos+1) fun (acc+1)
+              '}' -> aux (pos+1) fun (acc-1)
+              _   -> aux (pos+1) fun acc
         else
           show fun
   in aux 1 [] 0
