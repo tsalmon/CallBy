@@ -31,15 +31,14 @@ insert str txt p =
       
 isCsep x = x == ' ' || x== ';' || x == '\n' || x == ',' || x == '('
 
-isMain x l p = False
-
+--checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
 
 -- read file x writed in language l
 algo_read x l = 
   let aux pos fun acc = 
-        if(pos < (length x) && not (isMain x l pos)) then
+        if(pos < (length x)) then
           let getname buf_str buf_pos = 
-                if(pos > 0 && (x!!buf_pos) /= ' ') 
+                if(buf_pos > 0 && (x!!buf_pos) /= ' ') 
                 then getname ((x!!buf_pos):buf_str) (buf_pos-1) 
                 else buf_str
           in case (x!!pos) of
