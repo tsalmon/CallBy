@@ -18,7 +18,7 @@ import Text.Regex(subRegex,mkRegex)
 -}
   
 
---checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
+checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
 
 -- insert txt into str at position p 
 insert str txt p = 
@@ -64,25 +64,26 @@ call_by str (e:l) = if (str `elem` (tail e)) then (head e) ++ ", "++ (call_by st
 
 algo_write str l = 
   let aux pos new_str acc = 
-        if (pos < (length new_str)) then
-          let writePos buf_pos  = 
-                if ((new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
-                then buf_pos  
-                else (writePos (buf_pos - 1)) in
-          let getname buf_str buf_pos = 
-                if(buf_pos > 0 && (new_str!!buf_pos) /= ' ') 
-                then getname ((new_str!!buf_pos):buf_str) (buf_pos-1) 
-                else buf_str
-          in case (new_str!!pos) of
-            '(' -> if (acc == 0) then 
-                     let add_txt = "\n call by :" ++ (call_by (getname "" (pos-1)) l) ++ "\n" in
-                     aux (pos+(length add_txt)+1) (insert new_str (add_txt) (writePos (pos-1))) (acc) 
-                   else aux (pos+1) new_str (acc)
-            '{' -> aux (pos+1) new_str (acc+1)
-            '}' -> aux (pos+1) new_str (acc-1)
-            _   -> aux (pos+1) new_str acc
-        else
-          putStrLn (new_str)
+        let getname buf_str buf_pos = 
+              if(buf_pos > 0 && (new_str!!buf_pos) /= ' ') 
+              then getname ((new_str!!buf_pos):buf_str) (buf_pos-1) 
+              else buf_str
+         in         
+         if (pos < (length new_str) && not ((getname "" pos) == "main")) then
+           let writePos buf_pos  = 
+                 if ((new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
+                 then buf_pos  
+                 else (writePos (buf_pos - 1)) in
+           case (new_str!!pos) of
+             '(' -> if (acc == 0) then 
+                      let add_txt = "\ncall by :" ++ (call_by (getname "" (pos-1)) l) in
+                      aux (pos+(length add_txt)+1) (insert new_str (add_txt) (writePos (pos-1))) (acc) 
+                    else aux (pos+1) new_str (acc)
+             '{' -> aux (pos+1) new_str (acc+1)
+             '}' -> aux (pos+1) new_str (acc-1)
+             _   -> aux (pos+1) new_str acc
+         else
+           putStrLn (new_str)
   in aux 0 str 0
 
 readfile f = do
