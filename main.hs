@@ -33,6 +33,12 @@ isCsep x = x == ' ' || x== ';' || x == '\n' || x == ',' || x == '('
 
 --checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
 
+--rm duplicate elem
+no_double [] = []
+no_double (e:l)= e:(no_double (filter (/=e) l))
+browse_list [] = []
+browse_list (e:l) = (no_double e):(browse_list l) 
+
 -- read file x writed in language l
 algo_read x l = 
   let aux pos fun acc = 
@@ -48,7 +54,7 @@ algo_read x l =
               '}' -> aux (pos+1) fun (acc-1)
               _   -> aux (pos+1) fun acc
         else
-          show fun
+          show (browse_list fun)
   in aux 1 [] 0
 
 readfile f l = do
