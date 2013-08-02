@@ -64,24 +64,26 @@ call_by str (e:l) = if (str `elem` (tail e)) then (head e) ++ ", "++ (call_by st
 
 algo_write str l = 
   let aux pos new_str acc = 
-        if (pos < (length str)) then
+        if (pos < (length new_str)) then
           let writePos buf_pos  = 
-                if ((str!!buf_pos) == '\n' || (str!!buf_pos) == ';' || (str!!buf_pos) == '}') 
+                if ((new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
                 then buf_pos  
                 else (writePos (buf_pos - 1)) in
           let getname buf_str buf_pos = 
-                if(buf_pos > 0 && (str!!buf_pos) /= ' ') 
-                then getname ((str!!buf_pos):buf_str) (buf_pos-1) 
+                if(buf_pos > 0 && (new_str!!buf_pos) /= ' ') 
+                then getname ((new_str!!buf_pos):buf_str) (buf_pos-1) 
                 else buf_str
-          in case (str!!pos) of
-              '(' -> if (acc == 0) then aux (pos+1) (insert str ("\n call by :" ++ (call_by (getname "" pos) l) ++ "\n") (writePos pos)) (acc) 
-                     else aux (pos+1) new_str (acc)
-              '{' -> aux (pos+1) new_str (acc+1)
-              '}' -> aux (pos+1) new_str (acc-1)
-              _   -> aux (pos+1) new_str acc
+          in case (new_str!!pos) of
+            '(' -> if (acc == 0) then 
+                     let add_txt = "\n call by :" ++ (call_by (getname "" (pos-1)) l) ++ "\n" in
+                     aux (pos+(length add_txt)+1) (insert new_str (add_txt) (writePos (pos-1))) (acc) 
+                   else aux (pos+1) new_str (acc)
+            '{' -> aux (pos+1) new_str (acc+1)
+            '}' -> aux (pos+1) new_str (acc-1)
+            _   -> aux (pos+1) new_str acc
         else
           putStrLn (new_str)
-  in aux 0 "" 0
+  in aux 0 str 0
 
 readfile f = do
   outh <- openFile f ReadMode
