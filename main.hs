@@ -45,12 +45,12 @@ algo_read x =
   let aux pos fun acc = 
         if(pos < (length x)) then
           let getname buf_str buf_pos = 
-                if(buf_pos > 0 && (x!!buf_pos) /= ' ') 
+                if(buf_pos > 0 && not (isCsep(x!!buf_pos))) 
                 then getname ((x!!buf_pos):buf_str) (buf_pos-1) 
                 else buf_str
           in case (x!!pos) of
               '(' -> if (acc > 0) then aux (pos+1) (addlastlist fun (getname "" (pos-1))) (acc) 
-                     else aux (pos+1) (fun++[[getname "" (pos-1)]]) (acc)
+                   else aux (pos+1) (fun++[[getname "" (pos-1)]]) (acc)
               '{' -> aux (pos+1) fun (acc+1)
               '}' -> aux (pos+1) fun (acc-1)
               _   -> aux (pos+1) fun acc
@@ -59,39 +59,40 @@ algo_read x =
   in aux 1 [] 0
 
 -- for a method (str), get calles methodes
-call_by str [] = ""
-call_by str (e:l) = if (str `elem` (tail e)) then (head e) ++ ", "++ (call_by str l) else (call_by str l)  
+calls str [] = ""
+calls str (e:l) = if (str `elem` (tail e)) then (head e) ++ ", "++ (calls str l) else (calls str l)  
 
 algo_write str l = 
   let aux pos new_str acc = 
-        let getname buf_str buf_pos = 
-              if(buf_pos > 0 && (new_str!!buf_pos) /= ' ') 
+        let getname buf_str buf_pos =  
+              if(buf_pos > 0 &&  not (isCsep(new_str!!buf_pos))) 
               then getname ((new_str!!buf_pos):buf_str) (buf_pos-1) 
               else buf_str
-         in         
+        in
          if (pos < (length new_str) && not ((getname "" pos) == "main")) then
            let writePos buf_pos  = 
-                 if ((new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
+                 if (buf_pos < 1 || (new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
                  then buf_pos  
                  else (writePos (buf_pos - 1)) in
            case (new_str!!pos) of
              '(' -> if (acc == 0) then 
-                      let add_txt = "\ncall by :" ++ (call_by (getname "" (pos-1)) l) in
+                      let add_txt = "\ncall by :" ++ (calls (getname "" (pos-1)) l)++"\n" in
                       aux (pos+(length add_txt)+1) (insert new_str (add_txt) (writePos (pos-1))) (acc) 
                     else aux (pos+1) new_str (acc)
              '{' -> aux (pos+1) new_str (acc+1)
              '}' -> aux (pos+1) new_str (acc-1)
              _   -> aux (pos+1) new_str acc
          else
-           putStrLn (new_str)
-  in aux 0 str 0
+           (new_str)
+   in aux 1 str 0
 
-readfile f = do
-  outh <- openFile f ReadMode
-  x <- hGetContents outh
-  (algo_read x) --TODO: create method checkLanguage
-  hClose outh
+call_by f = do
+  file_in <- openFile f ReadMode
+  x <- hGetContents file_in
+  putStrLn(algo_read x)
+  hClose file_in
+  --writeFile f (algo_read x)
 
 main = do 
   x <- getArgs
-  readfile (x!!0)
+  call_by (x!!0)
