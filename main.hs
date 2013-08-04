@@ -19,7 +19,7 @@ import Text.Regex(subRegex,mkRegex)
 -}
   
 
-checkMain motif lang = (lang == "c" && motif == "main") || (lang == "java" && motif == "main")
+checkMain motif lang = (motif == "main" && lang == "c" || lang == "java")
 
 -- insert txt into str at position p 
 insert str txt p = 
