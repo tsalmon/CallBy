@@ -1,3 +1,4 @@
+import System.Directory
 import System.Environment
 import System.IO
 import Text.Regex.Posix
@@ -71,28 +72,30 @@ algo_write str l =
         in
          if (pos < (length new_str) && not ((getname "" pos) == "main")) then
            let writePos buf_pos  = 
-                 if (buf_pos < 1 || (new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
+                 if (buf_pos == 0 || (new_str!!buf_pos) == '\n' || (new_str!!buf_pos) == ';' || (new_str!!buf_pos) == '}') 
                  then buf_pos  
                  else (writePos (buf_pos - 1)) in
            case (new_str!!pos) of
              '(' -> if (acc == 0) then 
-                      let add_txt = "\ncall by :" ++ (calls (getname "" (pos-1)) l)++"\n" in
+                      let add_txt = "\n/*\ncall by: " ++ (calls (getname "" (pos-1)) l)++"\n*/\n" in
                       aux (pos+(length add_txt)+1) (insert new_str (add_txt) (writePos (pos-1))) (acc) 
                     else aux (pos+1) new_str (acc)
              '{' -> aux (pos+1) new_str (acc+1)
              '}' -> aux (pos+1) new_str (acc-1)
              _   -> aux (pos+1) new_str acc
          else
-           (new_str)
-   in aux 1 str 0
+           new_str -- return
+   in aux 1 (subCall str) 0
 
+subCall str = subRegex (mkRegex "\n/[*]\ncall by: .*\n[*]/\n") str  ""
+             
 call_by f = do
-  file_in <- openFile f ReadMode
-  x <- hGetContents file_in
-  putStrLn(algo_read x)
-  hClose file_in
-  --writeFile f (algo_read x)
-
+  contents <- readFile f
+  writeFile (f++".tmp") (algo_read (subCall contents)) 
+  new_contents <- readFile (f ++ ".tmp")
+  writeFile (f) (new_contents) 
+  removeFile (f++".tmp")
+    
 main = do 
-  x <- getArgs
-  call_by (x!!0)
+  args <- getArgs
+  call_by (head args)
